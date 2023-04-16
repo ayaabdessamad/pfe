@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Commande;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -12,34 +13,35 @@ class CommandController extends Controller
     public function ajouterCommande(Request $request)
     {
         $id_client = $request->input('id_client');
-        $id_plat = $request->input('id_plat');
-        $quantite = $request->input('quantite');
+        $prix_total = $request->input('prix_total');
 
         // Récupérer le solde du client
         $solde = DB::table('users')->where('id', $id_client)->value('solde');
 
-        // Calculer le montant total de la commande
-        $prix_unitaire = DB::table('plats')->where('id', $id_plat)->value('prix');
-        $prix_total = $quantite * $prix_unitaire;
+
 
         // Vérifier si le solde est suffisant pour couvrir le coût total de la commande
         if ($solde < $prix_total) {
-            return response()->json(['message' => 'solde insuffisant.']);
+            return response()->json(['success' => false, 'message' => 'solde insuffisant.']);
         }
 
         // Autoriser l'ajout de la commande
-        DB::table('commande')->insert([
+        $commande = new Commande();
+        $commande->id_client = $id_client;
+        $commande->prix_total = $prix_total;
+        $commande->date = now(); // ajouter la date actuelle
 
-            'id_plat' => $id_plat,
-            'id_client' => $id_client,
-            'quantite' => $quantite,
 
-            'prix' => $prix_total,
-        ]);
+        $commande->save();
+
+
 
         // Mettre à jour le solde du client
         DB::table('users')->where('id', $id_client)->decrement('solde', intval($prix_total));
 
-        return response()->json(['message' => 'Commande ajoutée avec succès.']);
+        // Vider le panier pour le client spécifique
+        DB::table('panier')->where('id_client', $id_client)->delete();
+
+        return response()->json(['status' => 200, 'success' => true, 'message' => 'Commande ajoutée avec succès.']);
     }
 }

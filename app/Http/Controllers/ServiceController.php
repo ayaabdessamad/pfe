@@ -28,6 +28,7 @@ class ServiceController extends Controller
         $serices->save();
         return response()->json([
             'status' => 200,
+            'success' => true,
             'message' => 'services added succesuffly',
         ]);
     }

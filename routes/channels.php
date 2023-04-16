@@ -13,6 +13,15 @@ use Illuminate\Support\Facades\Broadcast;
 |
 */
 
+/*Broadcast::channel('private-channel', function ($user) {
+    // Votre logique d'authentification pour les canaux privés
+    return true; // ou false si l'utilisateur n'est pas authentifié
+});*/
+
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
+});
+Broadcast::channel('admin-service-channel', function ($user) {
+    // return true si l'utilisateur est un admin service
+    return $user->role === 'admin_service';
 });

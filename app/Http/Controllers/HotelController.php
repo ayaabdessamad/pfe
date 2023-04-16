@@ -117,6 +117,7 @@ class HotelController extends Controller
         return response()->json([
             'status' => 200,
             'message' => 'hotels added succesuffly',
+            'success' => true
         ]);
     }
     public function edit($id)
@@ -163,6 +164,17 @@ class HotelController extends Controller
         $hotels = Hotel::where('nom', 'like', '%' . $nom . '%')->get();
         return response()->json($hotels);
     }
+    /* public function searchByFilter(Request $request)
+    {
+        $query = Hotel::query();
+
+        if ($request->has('star_rating')) {
+            $query->where('star_rating', '=', $request->input('star_rating'));
+        }
+
+        $hotels = $query->get();
+        return response()->json($hotels);
+    }/*
 
 
 

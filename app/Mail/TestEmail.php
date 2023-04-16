@@ -35,7 +35,7 @@ class TestEmail extends Mailable
     public function build()
     {
         return $this->from('aya@gmail.com')
-            ->subject("email de validation")
+            ->subject("Informations de connexion à votre compte")
             ->view('emails.test');
     }
 }

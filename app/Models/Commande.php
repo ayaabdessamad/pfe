@@ -13,9 +13,9 @@ class Commande extends Model
     public $timestamps = false;
     protected $fillable = [
         'id',
-        'quantite',
-        'prix',
-        'id_plat',
+
+        'prix_total',
+
         'id_client',
 
     ];

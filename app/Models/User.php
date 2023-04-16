@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
+
 class User extends Authenticatable implements JWTSubject
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -31,6 +32,7 @@ class User extends Authenticatable implements JWTSubject
         'id_service',
 
     ];
+
 
     /**
      * The attributes that should be hidden for serialization.

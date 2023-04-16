@@ -26,7 +26,7 @@ class AdminHotelController extends Controller
             'password' => 'required|string|min:6',
             'role' => 'required|string',
             'solde' => 'integer',
-            'statut' => 'string',
+
             'id_hotel' => 'integer',
             'id_service' => 'integer'
 
@@ -37,7 +37,7 @@ class AdminHotelController extends Controller
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
-        $personne = User::create(array_merge($validator->validated(), ['password' => bcrypt($request->password)]));
+        $personne = User::create(array_merge($validator->validated(), ['password' => bcrypt($request->password), 'statut' => 'non validé']));
         return response()->json(['message' => 'user successfuly registered', 'user' => $personne], 201);
     }
     public function login(Request $request)
@@ -61,11 +61,13 @@ class AdminHotelController extends Controller
             $this->createNewToken($token);
     }
     public function createNewToken($token)
+
     {
+        $expiresIn = now()->addWeek()->timestamp; // Durée de vie d'une semaine en secondes
         return response()->json([
             'token' => $token,
             'token-type' => 'Bearer',
-            //'expires_in' => Auth::guard('web')->factory()->getTTL() * 60,
+            'expires_in' => $expiresIn,
             'user' => Auth::guard('api')->user(),
             'status' => true
 

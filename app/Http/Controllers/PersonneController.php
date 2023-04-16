@@ -27,16 +27,19 @@ class PersonneController extends Controller
             'users' => $users,
         ]);
     }
-    //get all clients
-    public function getclients()
+    //get all clients selon id hotel
+    public function getClients($hotelId)
     {
-        $users = User::Where('role', 'client')->get();
+        $users = User::where('role', 'client')
+            ->where('id_hotel', $hotelId)
+            ->get();
+
         return response()->json([
             'status' => 200,
             'users' => $users,
         ]);
     }
-    //get all admins
+    //get all admins hotel
     public function getadmins()
     {
         $users = User::Where('role', 'admin-hotel')->get();
@@ -45,16 +48,16 @@ class PersonneController extends Controller
             'message' => $users,
         ]);
     }
-    //get all admins
-    public function getadmins_Service()
+    //get all admins service selon id_hotel
+    public function getadmins_Service($hotelId)
     {
-        $users = User::Where('role', 'admin_service')->get();
+        $users = User::Where('role', 'admin_service')->where('id_hotel', $hotelId)->get();
         return response()->json([
             'status' => 200,
             'message' => $users,
         ]);
     }
-    //add admins 
+    //add admins hotel
     public function store(Request $request)
     {
         $users = new User();
@@ -71,15 +74,16 @@ class PersonneController extends Controller
         $users->id_hotel = $request->input('id_hotel');
         $users->id_service = 0;
         $users->save();
-        // $userv = ['email' => $request->email, 'nom' => $request->nom, 'prénom' => $request->prénom, 'role' => $request->role];
-        // Mail::to('test@mail.test')->send(new TestEmail($userv));
+        $userv = ['email' => $request->email, 'nom' => $request->nom, 'prénom' => $request->prénom, 'role' => $request->role];
+        Mail::to($users->email)->send(new TestEmail($userv));
 
         return response()->json([
             'status' => 200,
             'message' => 'users added succesuffly',
+            'success' => true
         ]);
     }
-    //add admins 
+    //add admins  service
     public function add_admin_service(Request $request)
     {
         $users = new User();
@@ -102,6 +106,8 @@ class PersonneController extends Controller
         return response()->json([
             'status' => 200,
             'message' => 'users added succesuffly',
+            'success' => true
+
         ]);
     }
     public function edit($id)
@@ -163,18 +169,26 @@ class PersonneController extends Controller
             'message' => 'user deleted succesuffly',
         ]);
     }
-    public function valider(Request $request, $id)
+    public function validerC(Request $request, $id)
     {
+        $user = User::find($id);
 
-        $users =  User::find($id);
+        if ($user->statut === 'validé') {
+            return response()->json([
+                'status' => 400,
+                'message' => 'L\'utilisateur est déjà validé.',
+            ]);
+        }
 
-        $users->statut = 'validé';
-        $users->update();
+        $user->statut = 'validé';
+        $user->update();
+
         return response()->json([
             'status' => 200,
-            'message' => 'user validé succesuffly',
+            'message' => 'Utilisateur validé avec succès.',
         ]);
     }
+
     public function desactiver(Request $request, $id)
     {
 
@@ -187,12 +201,21 @@ class PersonneController extends Controller
             'message' => 'user désactivé succesuffly',
         ]);
     }
-    //recherche par nom hotel
-    public function searchByName($nom)
+    //recherche par nom 
+    public function searchByName($hotelId, $nom)
     {
-        $users = User::where('nom', 'like', '%' . $nom . '%')->get();
+        $users = User::where('nom', 'like', '%' . $nom . '%')->where('id_hotel', $hotelId)->get();
         return response()->json($users);
     }
+    //rechercher que les clients
+    public function searchClientByName($nom)
+    {
+        $users = User::where('nom', 'like', '%' . $nom . '%')
+            ->where('role', 'client')
+            ->get();
+        return response()->json($users);
+    }
+
     ////////////// les historiques 
     // Fonction pour récupérer l'historique des achats pour un hôtel spécifique
     public function getHistoriqueByHotelId($id_hotel)
@@ -204,7 +227,40 @@ class PersonneController extends Controller
             ->join('services', 'historique.id_service', '=', 'services.id_service')
             ->where('users.id_hotel', $id_hotel)
             ->select('historique.*', 'users.nom as nom_client', 'services.nom as nom_service')
-            ->get();
+            ->get()->groupBy(function ($item) {
+                return $item->nom_service;
+            });
+
+        // renvoyer l'historique en tant que réponse JSON
+        return response()->json(['historique' => $historique]);
+    }
+
+    public function getHistoriqueByServiceId($id_service)
+    {
+        // récupérer l'historique associé à l'ID du service
+        $historique = DB::table('historique')
+            ->join('users', 'historique.id_user', '=', 'users.id')
+            ->join('services', 'historique.id_service', '=', 'services.id_service')
+            ->where('services.id_service', $id_service)
+            ->select('historique.*', 'users.nom as nom_client', 'services.nom as nom_service')
+            ->get()->groupBy(function ($item) {
+                return $item->nom_service;
+            });
+
+        // renvoyer l'historique en tant que réponse JSON
+        return response()->json(['historique' => $historique]);
+    }
+    public function getHistoriqueByClientId($id_client)
+    {
+        // récupérer l'historique associé à l'ID du client
+        $historique = DB::table('historique')
+            ->join('users', 'historique.id_user', '=', 'users.id')
+            ->join('services', 'historique.id_service', '=', 'services.id_service')
+            ->where('users.id', $id_client)
+            ->select('historique.*', 'services.nom as nom_service')
+            ->get()->groupBy(function ($item) {
+                return $item->nom_service;
+            });
 
         // renvoyer l'historique en tant que réponse JSON
         return response()->json(['historique' => $historique]);

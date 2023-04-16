@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\MyEvent;
+
+use App\Models\User;
+use App\Notifications\CommandePassee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -43,12 +47,23 @@ class AchatsController extends Controller
                 'montant_paye' => $plan->prix
             ];
             DB::table('achats_plans')->insert($achat);
+            // envoyer une notification à l'admin
+            $id_user = $id_client;
+            $service_id = $plan->id_service;
+            $admin = User::where('role', 'admin_service')->where('id_service', $plan->id_service)->first();
+            $id_admin = $admin->id;
+            //event(new MyEvent($plan->prix, $id_user, $id_admin, $service_id));
+            //creer un evenement 
+            //event(new MyEvent('Nouvelle commande passée'));
+
+            $admin->notify(new CommandePassee($plan->prix, $id_user, $id_admin, $service_id));
+
 
             // renvoyer un message de succès à l'utilisateur
-            return response()->json(['success' => true, 'message' => 'Plan acheté avec succès.']);
+            return response()->json(['status' => 200, 'success' => true, 'message' => 'Félicitations le Plan est acheté avec succès.']);
         } else {
             // renvoyer un message d'erreur à l'utilisateur
-            return response()->json(['success' => false, 'message' => 'Solde insuffisant pour acheter ce plan.']);
+            return response()->json(['success' => false, 'message' => 'Désolé votre Solde est insuffisant pour acheter ce plan recharger votre compte et résayer.']);
         }
     }
 }
