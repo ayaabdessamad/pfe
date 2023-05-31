@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Hotel;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class HotelController extends Controller
 {
@@ -164,22 +165,16 @@ class HotelController extends Controller
         $hotels = Hotel::where('nom', 'like', '%' . $nom . '%')->get();
         return response()->json($hotels);
     }
-    /* public function searchByFilter(Request $request)
+    public function topHotels(Request $request)
     {
-        $query = Hotel::query();
+        $hotels = Hotel::join('users', 'hotel.id', '=', 'users.id_hotel')
+            ->select('hotel.*', DB::raw('count(users.id) as num_clients_inscrits'))
+            ->where('users.role', '=', 'client')
+            ->groupBy('hotel.id')
+            ->orderByDesc('num_clients_inscrits')
+            ->take(4)
+            ->get();
 
-        if ($request->has('star_rating')) {
-            $query->where('star_rating', '=', $request->input('star_rating'));
-        }
-
-        $hotels = $query->get();
         return response()->json($hotels);
-    }/*
-
-
-
-    /* response($code, $message){  return  return response()->json([
-            'status' => $code,
-            'message' => $message,
-        ]); }*/
+    }
 }

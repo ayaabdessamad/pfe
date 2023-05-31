@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Tymon\JWTAuth\Contracts\JWTSubject;
+use App\Models\Hotel;
 
 
 class User extends Authenticatable implements JWTSubject
@@ -32,8 +33,16 @@ class User extends Authenticatable implements JWTSubject
         'id_service',
 
     ];
+    public function hotel()
+    {
+        return $this->belongsTo(Hotel::class, 'id_hotel');
+    }
 
-
+    /*public function hotelName($id_hotel)
+    {
+        $hotel = Hotel::find($id_hotel);
+        return $hotel ? $hotel->nom : '';
+    }*/
     /**
      * The attributes that should be hidden for serialization.
      *

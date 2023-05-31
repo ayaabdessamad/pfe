@@ -29,7 +29,6 @@ return [
     */
 
     'connections' => [
-
         'pusher' => [
             'driver' => 'pusher',
             'key' => env('PUSHER_APP_KEY'),
@@ -38,28 +37,34 @@ return [
             'options' => [
                 'cluster' => env('PUSHER_APP_CLUSTER'),
                 'useTLS' => true,
-
+                'host' => env('PUSHER_HOST') ?: 'api-' . env('PUSHER_APP_CLUSTER', 'eu') . '.pusher.com',
+                'curl_options' => [
+                    CURLOPT_SSL_VERIFYHOST => 0,
+                    CURLOPT_SSL_VERIFYPEER => false,
+                ],
             ],
-        ],
 
-        'ably' => [
-            'driver' => 'ably',
-            'key' => env('ABLY_KEY'),
         ],
-
-        'redis' => [
-            'driver' => 'redis',
-            'connection' => 'default',
-        ],
-
-        'log' => [
-            'driver' => 'log',
-        ],
-
-        'null' => [
-            'driver' => 'null',
-        ],
-
     ],
+
+    'ably' => [
+        'driver' => 'ably',
+        'key' => env('ABLY_KEY'),
+    ],
+
+    'redis' => [
+        'driver' => 'redis',
+        'connection' => 'default',
+    ],
+
+    'log' => [
+        'driver' => 'log',
+    ],
+
+    'null' => [
+        'driver' => 'null',
+    ],
+
+
 
 ];

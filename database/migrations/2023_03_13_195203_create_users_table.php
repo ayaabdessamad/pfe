@@ -23,6 +23,7 @@ class CreateUsersTable extends Migration
             $table->string('role');
             $table->string('statut');
             $table->integer('solde');
+
             $table->integer('id_hotel')->unsigned();
             $table->integer('id_service')->unsigned();
             $table->foreign('id_hotel')

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Service;
+use Illuminate\Support\Facades\DB;
 
 class ServiceController extends Controller
 {
@@ -77,9 +78,45 @@ class ServiceController extends Controller
         ]);
     }
     //recherche par nom service
-    public function searchByName($nom)
+    public function searchServiceByName($hotelId, $nom)
     {
-        $services = Service::where('nom', 'like', '%' . $nom . '%')->get();
+        $services = Service::where('nom', 'like', '%' . $nom . '%')->where('id_hotel', $hotelId)->get();
         return response()->json($services);
+    }
+    public function getTopService()
+    {
+        $topRestaurantService = DB::table('services as s')
+            ->select('s.nom', 's.image', 'h.nom as nom_hotel', DB::raw('COUNT(DISTINCT c.id) as total_orders'))
+            ->join('menu as m', 's.id_service', '=', 'm.id_service')
+            ->join('plats as p', 'm.id', '=', 'p.id_menu')
+            ->join('commande as c', 'p.id', '=', 'c.id')
+            ->join('hotel as h', 's.id_hotel', '=', 'h.id')
+            ->where('s.type', '=', 'restaurant')
+            ->groupBy('s.id_service')
+            ->orderBy('total_orders', 'desc')
+            ->limit(1);
+
+        $topSportService = DB::table('services as s')
+            ->select('s.nom', 's.image', 'h.nom as nom_hotel', DB::raw('COUNT(DISTINCT ap.id) as total_plans'))
+            ->join('plans as tp', 's.id_service', '=', 'tp.id_service')
+            ->join('achats_plans as ap', 'tp.id', '=', 'ap.id_plan')
+            ->join('hotel as h', 's.id_hotel', '=', 'h.id')
+            ->where('s.type', '=', 'salle de sport')
+            ->groupBy('s.id_service')
+            ->orderBy('total_plans', 'desc')
+            ->limit(1);
+
+        $topSpa = DB::table('services as s')
+            ->select('s.nom', 's.image', 'h.nom as nom_hotel', DB::raw('COUNT(DISTINCT ap.id) as total_plans'))
+            ->join('plans as tp', 's.id_service', '=', 'tp.id_service')
+            ->join('achats_plans as ap', 'tp.id', '=', 'ap.id_plan')
+            ->join('hotel as h', 's.id_hotel', '=', 'h.id')
+            ->where('s.type', '=', 'spa')
+            ->groupBy('s.id_service')
+            ->orderBy('total_plans', 'desc')
+            ->limit(1);
+
+        $result = $topRestaurantService->union($topSportService)->union($topSpa)->get();
+        return response()->json($result);
     }
 }

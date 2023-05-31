@@ -9,52 +9,44 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use App\Events\Log;
+use App\Models\User;
 
-class MyEvent implements ShouldBroadcast
+class RequestClientValidation implements ShouldBroadcast
 {
+
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
      * Create a new event instance.
      *
      * @return void
+     * @var \App\Models\User
      */
-    public $data;
-
-    public function __construct($data)
+    public $personne;
+    public function __construct(User $personne)
     {
-        $this->data = $data;
+
+        $this->personne = $personne;
     }
 
     /**
      * Get the channels the event should broadcast on.
      *
      * @return \Illuminate\Broadcasting\Channel|array
-     * 
      */
-    /* public function broadcastOn()
-    {
-        return new PrivateChannel('my-channel');
-    }*/
     public function broadcastOn()
     {
-        // Log::info('MyEvent broadcasted on App.User.16');
-        $id = 16;
-        return new Channel('App.User.' . $id);
-    }
-    /*public function broadcastAs()
-    {
-        return 'my-event';
-    }
 
-    /* public function broadcastToOthers()
-    {
-        return true;
-    }*/
+        $id = 13;
+        return new Channel('App.client.' . $id);
+        //channel-name
+    }
     public function broadcastWith()
     {
+
         return [
-            'achat' => $this->data,
+            'personne' => $this->personne,
         ];
     }
 }

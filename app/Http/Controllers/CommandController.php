@@ -5,8 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Commande;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-
+use Illuminate\Support\Facades\Event;
 use Illuminate\Http\Request;
+use App\Events\MyEvent;
 
 class CommandController extends Controller
 {
@@ -24,6 +25,15 @@ class CommandController extends Controller
         if ($solde < $prix_total) {
             return response()->json(['success' => false, 'message' => 'solde insuffisant.']);
         }
+        // enregistrer les informations de l'achat dans la table d'historique
+        $historique = [
+            'id_user' => $id_client,
+            'id_service' => $request->input('id_service'),
+            'montant' => $prix_total,
+            'id_hotel' => $request->input('id_hotel'),
+            'date' => now()
+        ];
+        DB::table('historique')->insert($historique);
 
         // Autoriser l'ajout de la commande
         $commande = new Commande();
@@ -33,6 +43,12 @@ class CommandController extends Controller
 
 
         $commande->save();
+        $data = [
+            'message' => 'Nouvelle commande passé',
+            'achat' => $commande,
+        ];
+        Event::dispatch(new MyEvent($commande));
+
 
 
 

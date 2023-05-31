@@ -1,7 +1,8 @@
 <?php
 
 use App\Http\Controllers\AchatsController;
-use App\Http\Controllers\AdminHotelController;
+
+use App\Http\Controllers\AuthentificationController;
 use App\Http\Controllers\CommandController;
 use App\Http\Controllers\HotelController;
 use App\Http\Controllers\MenuController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\TestController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+
 Route::get('/hotels', [HotelController::class, 'index']);
 Route::get('/hotels/{localisation}', [HotelController::class, 'gethotelbylocalisation']);
 Route::get('/hotelsMonastir', [HotelController::class, 'gethotelsM']);
@@ -29,7 +31,6 @@ Route::get('/hotelsMahdia', [HotelController::class, 'gethotelsMA']);
 Route::get('/hotelsTozeur', [HotelController::class, 'gethotelsTO']);
 Route::get('/hotelsGammarth', [HotelController::class, 'gethotelsG']);
 Route::get('/search/{nom}', [HotelController::class, 'searchByName']);
-//Route::get('/search', [HotelController::class, 'searchByFilter']);
 Route::get('/pays', [PaysController::class, 'index']);
 
 
@@ -39,6 +40,8 @@ Route::get('/users', [PersonneController::class, 'index']);
 
 Route::put('/désactiver-user/{id}', [PersonneController::class, 'desactiver']);
 Route::get('/clients/{hotelId}', [PersonneController::class, 'getclients']);
+Route::get('/stats/{id}', [PersonneController::class, 'stats']);
+Route::get('/lastClient/{id}', [PersonneController::class, 'last3Clients']);
 
 
 
@@ -47,6 +50,8 @@ Route::get('/services', [ServiceController::class, 'index']);
 Route::get('/edit-service/{id}', [ServiceController::class, 'edit']);
 Route::get('/services/{id_hotel}', [ServiceController::class, 'getservicesbyidhotel']);
 Route::get('/searchS/{nom}', [ServiceController::class, 'searchByName']);
+Route::get('/top-restaurant-service', [ServiceController::class, 'getTopService']);
+Route::get('/top-hotels', [HotelController::class, 'topHotels']);
 
 Route::get('/menu/{id_service}', [MenuController::class, 'getmenubyidservice']);
 Route::get('/plats/{id}', [PlatsController::class, 'get_plat_by_idmenu']);
@@ -56,9 +61,9 @@ Route::get('/plats/{id}', [PlatsController::class, 'get_plat_by_idmenu']);
 Route::get('/plans/{id_service}', [PlansController::class, 'getplansbyidservice']);
 
 
-Route::get('/searchU/{nom}', [PersonneController::class, 'searchByName']);
+
 Route::get('/searchC/{hotelId}/{nom}', [PersonneController::class, 'searchClientByName']);
-Route::post('/ajouterCommande', [CommandController::class, 'ajouterCommande']);
+
 Route::post('/ajouterachat', [AchatsController::class, 'acheterPlanSalleSport']);
 Route::post('/ajouteraupanier', [PanierController::class, 'ajouterAuPanier']);
 Route::get('/panier/{id_client}', [PanierController::class, 'getPanierByClientId']);
@@ -67,12 +72,6 @@ Route::delete('/panier/{id}', [PanierController::class, 'destroy']);
 
 
 
-
-
-//////les historiques
-Route::get('/historique/{id_hotel}', [PersonneController::class, 'getHistoriqueByHotelId']);
-Route::get('/historiqueS/{id_service}', [PersonneController::class, 'getHistoriqueByServiceId']);
-Route::get('/historiqueC/{id_client}', [PersonneController::class, 'getHistoriqueByClientId']);
 
 // les fonctions autorisés pour l'admin service
 Route::middleware(['jwt.verify', 'CheckRole:admin_service'])->group(function () {
@@ -84,6 +83,7 @@ Route::middleware(['jwt.verify', 'CheckRole:admin_service'])->group(function () 
     Route::put('/update-plan/{id}', [PlansController::class, 'update_plan']);
     Route::get('/plan/{id}', [PlansController::class, 'get_plan_details']);
     Route::post('/add-plan', [PlansController::class, 'add_plan']);
+    Route::get('/historiqueS/{id_service}', [PersonneController::class, 'getHistoriqueByServiceId']);
 });
 
 
@@ -91,6 +91,7 @@ Route::middleware(['jwt.verify', 'CheckRole:admin_service'])->group(function () 
 Route::middleware(['jwt.verify', 'CheckRole:client,admin'])->group(function () {
     Route::get('/edit-hotel/{id}', [HotelController::class, 'edit']);
 });
+Route::get('/edit-hotel/{id}', [HotelController::class, 'edit']);
 
 // les fonctions autorisés pour l'admin et l'admin hotel 
 Route::middleware(['jwt.verify', 'CheckRole:admin-hotel,admin'])->group(function () {
@@ -104,12 +105,10 @@ Route::middleware(['jwt.verify', 'CheckRole:admin-hotel,admin'])->group(function
 Route::middleware(['jwt.verify', 'CheckRole:admin'])->group(function () {
     Route::delete('/delete-hotel/{id}',  [HotelController::class, 'delete']);
     Route::post('/add-hotel', [HotelController::class, 'store']);
-
     Route::put('/update-hotel/{id}', [HotelController::class, 'update']);
     Route::get('/admins', [PersonneController::class, 'getadmins']);
     Route::post('/add-admin', [PersonneController::class, 'store']);
-
-
+    Route::get('/searchAdmins/{nom}', [PersonneController::class, 'searchAdminsByName']);
     Route::get('/debug', function () {
         $user = auth()->user();
         $role = request()->route()->getAction()['CheckRole'];
@@ -118,7 +117,13 @@ Route::middleware(['jwt.verify', 'CheckRole:admin'])->group(function () {
 });
 // les fonctions autorisés pour unclient
 Route::middleware(['jwt.verify', 'CheckRole:client'])->group(function () {
+    Route::get('/searchHistorique/{idhotel}', [PersonneController::class, 'getHistoriqueByDate']);
+    Route::get('/historiqueC/{id_client}', [PersonneController::class, 'getHistoriqueByClientId']);
 });
+Route::post('/ajouteraupanier', [PanierController::class, 'ajouterAuPanier']);
+Route::get('/panier/{id_client}', [PanierController::class, 'getPanierByClientId']);
+Route::delete('/panier/{id}', [PanierController::class, 'destroy']);
+Route::post('/ajouterCommande', [CommandController::class, 'ajouterCommande']);
 
 // les fonctions autorisés pour l'admin-hotel
 Route::middleware(['jwt.verify', 'CheckRole:admin-hotel'])->group(function () {
@@ -127,16 +132,26 @@ Route::middleware(['jwt.verify', 'CheckRole:admin-hotel'])->group(function () {
     Route::put('/update-service/{id}', [ServiceController::class, 'update']);
     Route::delete('/delete-service/{id}', [ServiceController::class, 'delete']);
     Route::post('/add_admin_service', [PersonneController::class, 'add_admin_service']);
+    Route::get('/searchClients/{hotel_id}/{nom}', [PersonneController::class, 'searchClientByName']);
+    Route::get('/searchAdminService/{hotel_id}/{nom}', [PersonneController::class, 'searchAdminServiceByName']);
+    Route::get('/searchService/{hotel_id}/{nom}', [ServiceController::class, 'searchServiceByName']);
+    Route::get('/historique/{id_hotel}', [PersonneController::class, 'getHistoriqueByHotelId']);
 });
 Route::put('/valider-user/{id}', [PersonneController::class, 'validerC']);
+Route::put('/valider-client/{id}', [PersonneController::class, 'valideruser']);
+Route::put('/désactiver-user/{id}', [PersonneController::class, 'disableUser']);
+
+Route::get('/info/{id}', [AuthentificationController::class, 'getUser']);
 
 
-
-
+Route::post('/changer_password', [PersonneController::class, 'changePassword']);
 //authentification
 Route::middleware('jwt.auth')->get('/user', function (Request $request) {
     return $request->user();
 });
+Route::get('/reservations/{id_plan}', [AchatsController::class, 'getReservations']);
+
+
 
 
 Route::group([
@@ -145,12 +160,10 @@ Route::group([
 ], function ($router) {
 
 
-    Route::post('/login', [AdminHotelController::class, 'login']);
-    Route::post('/create', [AdminHotelController::class, 'register']);
-    Route::get('/profile', [AdminHotelController::class, 'profile']);
-    Route::post('/logout', [AdminHotelController::class, 'logout']);
-    // Route::post('/loginUser', [PersonneController::class, 'loginUser']);
+    Route::post('/login', [AuthentificationController::class, 'login']);
+    Route::post('/create', [AuthentificationController::class, 'register']);
+    Route::get('/profile', [AuthentificationController::class, 'profile']);
+    Route::post('/logout', [AuthentificationController::class, 'logout']);
+
     Route::get('/users', [PersonneController::class, 'index']);
-    // Route::get('/profile', [PersonneController::class, 'profile']);
-    // Route::post('/logout', [PersonneController::class, 'logout']);
 });
